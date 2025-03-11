@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatGPT UI Clone</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <script>
+    // Trigger send on Enter key press
+    function checkEnter(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        document.getElementById('send-btn').click();
+      }
+    }
+    // Optional: Show a typing indicator
+    function showTypingIndicator() {
+      document.getElementById('typing-indicator').style.display = 'block';
+    }
+    function hideTypingIndicator() {
+      document.getElementById('typing-indicator').style.display = 'none';
+    }
+  </script>
+</head>
+
+<body>
+  <div class="chat-container">
+    <nav class="navbar">
+      <div class="user-info">
+        <img src="{{ url_for('static', filename='user.jpg') }}" alt="User" class="avatar" />
+        <div>
+          <div class="username">Chatbot</div>
+          <div class="status">Online</div>
+        </div>
+      </div>
+      <form action="/clear" method="POST" class="clear-form">
+        <button type="submit" class="clear-btn">🗑️</button>
+      </form>
+    </nav>
+
+    <div class="chat-box" id="chat-box">
+      {% for chat in chats %}
+      <div class="chat-message {% if chat.role == 'user' %}user{% else %}bot{% endif %}">
+        {{ chat.message }}
+      </div>
+      {% endfor %}
+      <!-- Typing Indicator (hidden by default) -->
+      <div id="typing-indicator" class="typing-indicator">Typing...</div>
+    </div>
+
+    <div class="input-box">
+      <form action="/" method="POST" class="input-form">
+        <input
+          id="message-input"
+          type="text"
+          name="message"
+          placeholder="Type a message..."
+          onkeypress="checkEnter(event)"
+          autocomplete="off"
+        />
+        <button type="submit" id="send-btn" onclick="showTypingIndicator()">➤</button>
+      </form>
+
+      <form action="/upload" method="POST" enctype="multipart/form-data" class="upload-form">
+        <input type="file" name="file" id="file" hidden />
+        <label for="file">📎</label>
+      </form>
+
+      <form action="/audio" method="POST" enctype="multipart/form-data" class="audio-form">
+        <input type="file" name="audio" id="audio" hidden />
+        <label for="audio">🎙️</label>
+      </form>
+    </div>
+  </div>
+</body>
+
+</html>
