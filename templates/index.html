@@ -2,11 +2,19 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ChatGPT UI Clone</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cultiv-Ai</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <script>
+    // Example: Simulate typing indicator
+    function showTypingIndicator() {
+      document.getElementById('typing-indicator').style.display = 'block';
+    }
+    function hideTypingIndicator() {
+      document.getElementById('typing-indicator').style.display = 'none';
+    }
+
     // Trigger send on Enter key press
     function checkEnter(event) {
       if (event.key === 'Enter') {
@@ -14,23 +22,24 @@
         document.getElementById('send-btn').click();
       }
     }
-    // Optional: Show a typing indicator
-    function showTypingIndicator() {
-      document.getElementById('typing-indicator').style.display = 'block';
-    }
-    function hideTypingIndicator() {
-      document.getElementById('typing-indicator').style.display = 'none';
+
+    // Text-to-Speech Function
+    function speakMessage(message) {
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = 'en-IN'; // Set language to English (India)
+      window.speechSynthesis.speak(utterance);
     }
   </script>
 </head>
 
 <body>
   <div class="chat-container">
+    <!-- Navbar -->
     <nav class="navbar">
       <div class="user-info">
-        <img src="{{ url_for('static', filename='user.jpg') }}" alt="User" class="avatar" />
+        <img src="{{ url_for('static', filename='user.jpg') }}" alt="User" class="avatar">
         <div>
-          <div class="username">Chatbot</div>
+          <div class="username">Cultiv-Ai</div>
           <div class="status">Online</div>
         </div>
       </div>
@@ -39,36 +48,39 @@
       </form>
     </nav>
 
+    <!-- Chat Box -->
     <div class="chat-box" id="chat-box">
       {% for chat in chats %}
-      <div class="chat-message {% if chat.role == 'user' %}user{% else %}bot{% endif %}">
+      <div class="chat-message {{ 'user' if chat.role == 'user' else 'bot' }}">
         {{ chat.message }}
+        {% if chat.role == 'bot' %}
+        <!-- Add speaker button for bot messages -->
+        <button class="speak-btn" onclick="speakMessage(`{{ chat.message }}`)">🔊</button>
+        {% endif %}
       </div>
       {% endfor %}
+      
       <!-- Typing Indicator (hidden by default) -->
       <div id="typing-indicator" class="typing-indicator">Typing...</div>
     </div>
 
+    <!-- Input Box -->
     <div class="input-box">
       <form action="/" method="POST" class="input-form">
-        <input
-          id="message-input"
-          type="text"
-          name="message"
-          placeholder="Type a message..."
-          onkeypress="checkEnter(event)"
-          autocomplete="off"
-        />
+        <input id="message-input" type="text" name="message" placeholder="Type a message..."
+          onkeypress="checkEnter(event)" autocomplete="off">
         <button type="submit" id="send-btn" onclick="showTypingIndicator()">➤</button>
       </form>
 
+      <!-- Upload Button -->
       <form action="/upload" method="POST" enctype="multipart/form-data" class="upload-form">
-        <input type="file" name="file" id="file" hidden />
+        <input type="file" name="file" id="file" hidden>
         <label for="file">📎</label>
       </form>
 
+      <!-- Audio Button -->
       <form action="/audio" method="POST" enctype="multipart/form-data" class="audio-form">
-        <input type="file" name="audio" id="audio" hidden />
+        <input type="file" name="audio" id="audio" hidden>
         <label for="audio">🎙️</label>
       </form>
     </div>

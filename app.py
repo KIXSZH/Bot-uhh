@@ -43,28 +43,74 @@ def chat_with_gemini(prompt):
         return response.text.strip()
     except Exception as e:
         return f"Error: {str(e)}"
+# Restrict questions to agriculture-related topics
+ALLOWED_KEYWORDS = [
+    'hello', 'hi', 'hey','vanakam', 'greetings', 'morning', 'afternoon', 'evening', 'hola', 'namaste','crop', 'soil', 'fertilizer', 'irrigation', 'harvest', 'pest', 'disease', 'yield', 
+    'plant', 'seed', 'weather', 'climate', 'agriculture', 'farming', 'organic', 'genetics',
+    'greenhouse', 'compost', 'mulch', 'pruning', 'spraying', 'weeding', 'grafting', 'pollination',
+    'soil health', 'irrigation system', 'drip irrigation', 'sprinkler', 'organic farming', 
+    'hydroponics', 'aquaponics', 'permaculture', 'sustainable', 'crop rotation', 'monoculture', 
+    'cover crop', 'pesticide', 'herbicide', 'insecticide', 'fungicide', 'weed control', 
+    'agrochemicals', 'GMOs', 'genetically modified', 'fertilizer management', 'composting', 
+    'microorganisms', 'biological pest control', 'soil erosion', 'soil fertility', 'water management', 
+    'plant disease', 'fungal disease', 'bacterial disease', 'viral disease', 'crop disease', 
+    'leaf blight', 'rust', 'aphids', 'fungus', 'nematodes', 'mildew', 'fungal spores', 'insects', 
+    'moths', 'termites', 'rodents', 'birds', 'snails', 'slugs', 'antioxidants', 'biomass', 
+    'biodiversity', 'irrigation technique', 'drought', 'flood', 'temperature', 'humidity', 'wind', 
+    'frost', 'farming method', 'conventional farming', 'mechanization', 'agricultural technology', 
+    'robotics', 'harvest timing', 'grain', 'rice', 'wheat', 'corn', 'soybean', 'cotton', 'barley', 
+    'oats', 'sorghum', 'millet', 'peas', 'lentils', 'chickpeas', 'tomato', 'cucumber', 'carrot', 
+    'onion', 'garlic', 'lettuce', 'spinach', 'kale', 'potato', 'sweet potato', 'pumpkin', 
+    'watermelon', 'broccoli', 'cauliflower', 'green beans', 'beetroot', 'corn stalk', 'cotton boll', 
+    'tobacco', 'cacao', 'coffee', 'citrus', 'apple', 'mango', 'banana', 'pineapple', 'cherry', 
+    'avocado', 'grapes', 'peach', 'pear', 'plum', 'kiwi', 'berry', 'blackberry', 'blueberry', 
+    'strawberry', 'raspberry', 'agricultural policy', 'supply chain', 'farm economics', 'market price', 
+    'food security', 'food waste', 'crop insurance', 'food quality', 'food safety', 'yield prediction', 
+    'soil moisture', 'nutrient deficiencies', 'agronomy', 'agriculture research', 'agri-tech', 'biotech', 
+    'farm machinery', 'tractor', 'plow', 'harvester', 'combine', 'planting depth', 'seedling', 
+    'agriculture extension', 'field management', 'labor costs', 'global warming', 'carbon footprint', 
+    'sustainability', 'soil testing', 'crop growth', 'biodynamic farming', 'agricultural education', 
+    'wildlife conservation', 'conservation tillage', 'integrated pest management', 'natural pesticides', 
+    'pollution', 'land degradation', 'overgrazing', 'deforestation', 'ecosystem', 'carbon sequestration', 
+    'renewable energy', 'solar farming', 'wind farming', 'bioenergy', 'biomass energy', 'agroforestry', 
+    'land restoration', 'agriculture subsidies', 'international trade', 'agribusiness', 'farmer cooperatives', 
+    'rural development', 'farming cooperatives', 'fair trade', 'organic certification', 'food labeling', 
+    'export', 'import', 'supply chain management', 'food processing', 'distribution', 'market trends'
+]
 
-# Handle text message
+
+def is_valid_question(question):
+    # Convert question to lowercase and check if any keyword is present
+    question = question.lower()
+    return any(keyword in question for keyword in ALLOWED_KEYWORDS)
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
         user_message = request.form.get("message")
+        
         if user_message:
+            if not is_valid_question(user_message):
+                # Invalid question -> Save as error message
+                bot_response = "Sorry, I can only answer agriculture-related questions."
+            else:
+                # Valid question -> Call Gemini API
+                bot_response = chat_with_gemini(user_message)
+
+            # Save User Message
             user_chat = ChatMessage(role="user", message=user_message)
             db.session.add(user_chat)
-            db.session.commit()
             
-            # Generate Gemini response
-            bot_response = chat_with_gemini(user_message)
+            # Save Bot Response
             bot_chat = ChatMessage(role="bot", message=bot_response)
             db.session.add(bot_chat)
-            db.session.commit()
             
+            db.session.commit()
             return redirect(url_for("index"))
 
     # Load all chat messages
     chats = ChatMessage.query.order_by(ChatMessage.timestamp.asc()).all()
     return render_template("index.html", chats=chats)
+
 
 # Handle image upload
 @app.route("/upload", methods=["POST"])
